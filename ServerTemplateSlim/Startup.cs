@@ -6,11 +6,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using ServerTemplateSlim.BLL;
 using ServerTemplateSlim.Infra.Interfaces.BLL;
-using ServerTemplateSlim.Infra.Interfaces.DAL;
-using ServerTemplateSlim.DAL.MySqlInfraDAL;
-using ServerTemplateSlim.Infra.Interfaces.DAL.DbContext;
-using ServerTemplateSlim.DAL.DbContext;
 using Serilog;
+using ServerTemplateSlim.Data;
+using Microsoft.EntityFrameworkCore;
+using ServerTemplateSlim.Model;
+using Microsoft.AspNetCore.Identity;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System;
 
 namespace ServerTemplateSlim
 {
@@ -27,20 +31,57 @@ namespace ServerTemplateSlim
         public void ConfigureServices(IServiceCollection services)
         {
 
-            // Add services here
-            // BLL
-            services.AddTransient<IInfraService,InfraService>();
-            services.AddTransient<IJsonLocalFileService, JsonLocalFileService>();
+            //Inject ApplicationSettings model from appsetting.json file
+            services.Configure<ApplicationSettings>(Configuration.GetSection("ApplicationSettings"));
 
+            // BLL      
+            services.AddScoped<ISecurityService, SecurityService>();
+            services.AddScoped<IVideoLinksService, VideoLinksService>();
+            services.AddScoped<IVideoCategoriesService, VideoCategoriesService>();
+            
+            //EF
+            services.AddDbContext<MaccabiContext>(options => options.UseSqlServer("Server=localhost\\SQLEXPRESS;Database=maccabi;Trusted_Connection=True;"));
 
-            //DAL
-            services.AddTransient<IInfraConext, InfraContext>();
-            services.AddTransient<IInfraDAL, MySqlInfraDAL>();
+            // Idenity
+            services.AddIdentity<MaccabiUser, IdentityRole>(options =>
+            {
+                // Password options
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequiredLength = 5;
+                options.Password.RequiredUniqueChars = 0;
+
+            }).AddEntityFrameworkStores<MaccabiContext>();
+
+            #region Jwt Authentication Config
+            var key = Encoding.UTF8.GetBytes(Configuration["ApplicationSettings:JWT_Secret"].ToString());
+
+            services.AddAuthentication(x =>
+            {
+                x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                x.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(x =>
+            {
+                x.RequireHttpsMetadata = false;
+                x.SaveToken = false;
+                x.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
+            #endregion
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "ServerTemplateSlim", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Maccabi", Version = "v1" });
             });
         }
 
