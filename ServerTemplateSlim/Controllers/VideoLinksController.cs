@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ServerTemplateSlim.Infra.DTO;
@@ -12,6 +14,7 @@ namespace ServerTemplateSlim.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class VideoLinksController : ControllerBase
     {
         private readonly IVideoLinksService _videosService;
@@ -24,10 +27,10 @@ namespace ServerTemplateSlim.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddVideo(VideoLinkDTO videoLinkDTO)
+        public async Task<IActionResult> AddVideoLink(VideoLinkDTO videoLinkDTO)
         {
-           // var Email = User.Claims.First(c => c.Type == "UserEmail").Value;
-            var Response = await _videosService.AddVideo(videoLinkDTO, "aaa@sss.com");
+            var Email = User.Claims.First(c => c.Type == "UserEmail").Value;
+            var Response = await _videosService.AddVideo(videoLinkDTO, Email);
             if (Response)
             {
                 return StatusCode(201);
@@ -41,16 +44,16 @@ namespace ServerTemplateSlim.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllVideos()
         {
-           // var Email = User.Claims.First(c => c.Type == "UserEmail").Value;
-            var Response = await _videosService.GetAllVideos("aaa@sss.com");
+            var Email = User.Claims.First(c => c.Type == "UserEmail").Value;
+            var Response = await _videosService.GetAllVideos(Email);
 
             return Ok(Response);       
         }
 
-        [HttpPatch]
-        public async Task<IActionResult> GetAllVideos(VideoLink videoLink)
+        [HttpPut]
+        public async Task<IActionResult> PutVideoLink(VideoLinkPutDTO videoLinkPutDTO)
         {
-            var Response = await _videosService.UpdateVideo(videoLink);
+            var Response = await _videosService.UpdateVideo(videoLinkPutDTO);
             if (Response)
             {
                 return StatusCode(201);
@@ -62,9 +65,9 @@ namespace ServerTemplateSlim.Controllers
         }
 
         [HttpDelete]
-        public async Task<IActionResult> GetAllVideos(Guid videoLinkID)
+        public async Task<IActionResult> DeleteVideoLink(string id)
         {
-            var Response = await _videosService.RemoveVideo(videoLinkID);
+            var Response = await _videosService.RemoveVideo(id);
             if (Response)
             {
                 return StatusCode(201);

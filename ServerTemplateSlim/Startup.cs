@@ -47,7 +47,7 @@ namespace ServerTemplateSlim
             {
                 // Password options
                 options.Password.RequireDigit = true;
-                options.Password.RequireLowercase = false;
+                options.Password.RequireLowercase = true;
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequireUppercase = false;
                 options.Password.RequiredLength = 5;
@@ -94,14 +94,13 @@ namespace ServerTemplateSlim
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "ServerTemplateSlim v1"));
             }
+            app.UseExceptionHandler("/error"); 
 
             app.UseHttpsRedirection();
-
 
             app.UseSerilogRequestLogging();
 
             app.UseStaticFiles();
-
 
             app.UseRouting();
 

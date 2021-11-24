@@ -34,7 +34,7 @@ namespace ServerTemplateSlim.BLL
 
             // Get the selected category
             var VideosCategory = (from vc in _maccabiContext.VideoCategories
-                                  where vc.Name == videoLinkDTO.Category.Name
+                                  where vc.Name == videoLinkDTO.Category
                                   select vc).SingleOrDefault();
 
             // Add new video link with its category
@@ -59,10 +59,10 @@ namespace ServerTemplateSlim.BLL
             return Record.VideoLinkList;
         }
 
-        public async Task<bool> RemoveVideo(Guid videoLinkID)
+        public async Task<bool> RemoveVideo(string videoLinkID)
         {
             var Record = await (from vl in _maccabiContext.VideoLinks
-                                where vl.ID == videoLinkID
+                                where vl.ID == Guid.Parse(videoLinkID)
                                 select vl).FirstOrDefaultAsync();
 
             if (Record != null)
@@ -76,16 +76,22 @@ namespace ServerTemplateSlim.BLL
 
         }
 
-        public async Task<bool> UpdateVideo(VideoLink videoLink)
+        public async Task<bool> UpdateVideo(VideoLinkPutDTO videoLinkPutDTO)
         {
-            var Record = await (from vl in _maccabiContext.VideoLinks
-                                where vl.ID == videoLink.ID
+            // Get the video link
+            var Record = await (from vl in _maccabiContext.VideoLinks.Include(VideoLink => VideoLink.Category)
+                                where vl.ID == Guid.Parse(videoLinkPutDTO.ID)
                                 select vl).FirstOrDefaultAsync();
+
+            // Get the category with Guid
+            var Category = await (from vc in _maccabiContext.VideoCategories
+                                  where vc.Name == videoLinkPutDTO.Category
+                                  select vc).FirstOrDefaultAsync();
 
             if (Record != null)
             {
-                Record.Link = videoLink.Link;
-                Record.Category = videoLink.Category;
+                Record.Link = videoLinkPutDTO.Link;
+                Record.Category = Category;
                 await _maccabiContext.SaveChangesAsync();
                 return true;
             }

@@ -9,8 +9,8 @@ namespace ServerTemplateSlim.Infra.Interfaces.BLL
     public interface IVideoLinksService
     {
         Task<bool> AddVideo(VideoLinkDTO videoLinkDTO, string Email);
-        Task<bool> RemoveVideo(Guid videoLinkID);
-        Task<bool> UpdateVideo(VideoLink videoLink);
+        Task<bool> RemoveVideo(string videoLinkID);
+        Task<bool> UpdateVideo(VideoLinkPutDTO videoLinkPutDTO);
         Task<List<VideoLink>> GetAllVideos(string Email);
     }
 }

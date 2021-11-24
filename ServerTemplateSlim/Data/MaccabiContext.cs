@@ -22,8 +22,14 @@ namespace ServerTemplateSlim.Data
             base.OnModelCreating(modelBuilder);
 
 
-            modelBuilder.Entity<MaccabiUser>(entity => {
+            modelBuilder.Entity<MaccabiUser>(entity =>
+            {
                 entity.HasIndex(e => e.Email).IsUnique();
+            });
+
+            modelBuilder.Entity<VideoCategory>(entity =>
+            {
+                entity.HasIndex(e => e.Name).IsUnique();
             });
         }
 
